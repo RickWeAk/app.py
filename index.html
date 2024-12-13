@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rio_Kicks - Nike Shoes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            margin-bottom: 20px;
+        }
+        .product-card {
+            margin: 20px 0;
+        }
+        .product-card img {
+            max-height: 200px;
+            object-fit: cover;
+        }
+        .product-title {
+            height: 50px;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: scale(1.05);
+            transition: all 0.3s ease;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .spinner {
+            border: 6px solid #ddd;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        footer {
+            background-color: #343a40;
+            color: #fff;
+            padding: 20px 0;
+        }
+        footer .social-icons a {
+            color: #fff;
+            margin: 0 10px;
+            font-size: 24px;
+            text-decoration: none;
+        }
+        footer .social-icons a:hover {
+            color: #3498db;
+        }
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+        .cart-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            max-width: 800px;
+            margin: auto;
+        }
+        .cart-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .cart-item button {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .cart-item button:hover {
+            background-color: #c82333;
+        }
+        .cart-total {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Rio_Kicks</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#products">Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#cart" id="cart-link">Cart (0)</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="container text-center mb-4">
+        <input type="text" id="searchInput" class="form-control w-50 mx-auto" placeholder="Search for products..." oninput="searchProducts()">
+    </div>
+
+    <!-- Hero Section -->
+    <div class="container text-center">
+        <h1 class="display-4">Welcome to Rio_Kicks</h1>
+        <p class="lead">Shop the latest Nike shoes at unbeatable prices!</p>
+    </div>
+
+    <!-- Products Section -->
+    <div id="products" class="container">
+        <h2 class="text-center">Our Products</h2>
+        <div class="row row-cols-1 row-cols-md-3 g-4" id="products-list">
+            <!-- Products will be dynamically populated here -->
+        </div>
+    </div>
+
+    <!-- Cart Section -->
+    <div id="cart" class="container mt-5">
+        <div class="cart-container">
+            <h3 class="cart-header">Your Cart</h3>
+            <div id="cart-items">
+                <!-- Cart items will appear here dynamically -->
+            </div>
+            <div id="cart-total" class="cart-total"></div>
+            <button class="btn btn-success" onclick="checkout()">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center">
+        <p>&copy; 2024 Rio_Kicks. All rights reserved.</p>
+        <div class="social-icons">
+            <a href="https://facebook.com" target="https://www.facebook.com/re.yuu.2024">Facebook</a>
+            <a href="https://instagram.com" target="_blank">Instagram</a>
+            <a href="https://twitter.com" target="_blank">Twitter</a>
+        </div>
+    </footer>
+
+    <div class="alert-container" id="alert-container"></div>
+
+    <script>
+        let cart = [];
+        let cartLink = document.getElementById('cart-link');
+        let productsData = [
+            {name: 'Nike Air Max 270', price: 7500, imgUrl: 'shoes/1.jpg', details: 'The Nike Air Max 270 is a stylish and comfortable shoe designed for all-day wear.'},
+            {name: 'Nike Air Force 1', price: 6000, imgUrl: 'shoes/2.jpg', details: 'The Nike Air Force 1 is a classic, offering both comfort and timeless style.'},
+            {name: 'Nike Zoom Fly', price: 8000, imgUrl: 'shoes/3.jpg', details: 'The Nike Zoom Fly is engineered for fast runners, with lightweight and responsive cushioning.'},
+            {name: 'Nike Free RN 5.0', price: 7000, imgUrl: 'shoes/4.jpg', details: 'The Nike Free RN 5.0 offers flexibility and natural movement for runners.'},
+            {name: 'Nike React Infinity', price: 9000, imgUrl: 'shoes/5.jpg', details: 'The Nike React Infinity provides soft, responsive cushioning for long runs.'},
+            {name: 'Nike Vaporfly Next%', price: 12500, imgUrl: 'shoes/6.jpg', details: 'The Nike Vaporfly Next% is built for speed, featuring advanced technology for elite runners.'},
+            {name: 'Nike Air Zoom Pegasus', price: 7500, imgUrl: 'shoes/7.jpg', details: 'The Nike Air Zoom Pegasus is a reliable and versatile running shoe for all distances.'},
+            {name: 'Nike SB Dunk Low', price: 8500, imgUrl: 'shoes/8.jpg', details: 'The Nike SB Dunk Low combines skateboarding heritage with modern streetwear.'},
+            {name: 'Nike Air Jordan 1', price: 10000, imgUrl: 'shoes/9.jpg', details: 'The Nike Air Jordan 1 is a legendary sneaker with a premium design and performance.'},
+            {name: 'Nike Air Max 90', price: 8000, imgUrl: 'shoes/10.jpg', details: 'The Nike Air Max 90 offers comfort and style with its signature Air Max cushioning.'}
+        ];
+
+        function addToCart(productName, price, imgUrl) {
+            cart.push({ productName, price, imgUrl });
+            updateCartUI();
+            showAlert(`${productName} added to your cart!`);
+        }
+
+        function removeFromCart(productName) {
+            cart = cart.filter(item => item.productName !== productName);
+            updateCartUI();
+            showAlert(`${productName} removed from your cart.`);
+        }
+
+        function updateCartUI() {
+            cartLink.innerHTML = `Cart (${cart.length})`;
+
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalContainer = document.getElementById('cart-total');
+            cartItemsContainer.innerHTML = '';
+            cartTotalContainer.innerHTML = '';
+
+            if (cart.length > 0) {
+                cart.forEach(item => {
+                    const cartItem = document.createElement('div');
+                    cartItem.classList.add('cart-item');
+                    cartItem.innerHTML = `
+                        <div class="row">
+                            <div class="col-8">
+                                ${item.productName} - ₱${item.price}
+                            </div>
+                            <div class="col-4 text-end">
+                                <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.productName}')">Remove</button>
+                            </div>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(cartItem);
+                });
+
+                const totalAmount = cart.reduce((total, item) => total + item.price, 0).toFixed(2);
+                cartTotalContainer.innerHTML = `<h4>Total: ₱${totalAmount}</h4>`;
+            } else {
+                cartItemsContainer.innerHTML = "<p>Your cart is empty.</p>";
+            }
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert("Your cart is empty. Add products to the cart before checkout.");
+            } else {
+                alert("Proceeding to checkout...");
+            }
+        }
+
+        function searchProducts() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const filteredProducts = productsData.filter(product => product.name.toLowerCase().includes(searchValue));
+            renderProducts(filteredProducts);
+        }
+
+        function renderProducts(products) {
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '';
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.classList.add('col');
+                productCard.innerHTML = `
+                    <div class="card product-card">
+                        <img src="${product.imgUrl}" class="card-img-top" alt="${product.name}">
+                        <div class="card-body">
+                            <h5 class="card-title product-title">${product.name}</h5>
+                            <p class="card-text">₱${product.price}</p>
+                            <button class="btn btn-primary" onclick="addToCart('${product.name}', ${product.price}, '${product.imgUrl}')">Add to Cart</button>
+                            <a href="#" class="btn btn-secondary mt-2" onclick="viewDetails('${product.name}', '${product.details}')">View Details</a>
+                        </div>
+                    </div>
+                `;
+                productsList.appendChild(productCard);
+            });
+        }
+
+        function viewDetails(productName, details) {
+            alert(`${productName}\n\nDetails:\n${details}`);
+        }
+
+        function showAlert(message) {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.classList.add('alert', 'alert-success');
+            alert.innerHTML = message;
+            alertContainer.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        window.onload = function () {
+            document.getElementById('loading').style.display = 'none';
+            renderProducts(productsData); // Render all products initially
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
